@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "RegularizedDiscriminantAnalysis"
+version = "0.1.0"
+description = "A scikit-learn compatible implementation of Regularized Discriminant Analysis (RDA)"
+readme = "README.md"
+authors = [
+    {name = "Federico Clerici", email = "fez.cle@gmail.com"},
+    {name = "Raffaele D'Agostino", email = "raffaeledagostino11@gmail.com"}
+]
+requires-python = ">=3.8"
+license = "MIT"
+keywords = ["machine learning", "classification", "discriminant analysis", "RDA", "LDA", "QDA", "scikit-learn"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.20",
+    "scipy>=1.7",
+    "scikit-learn>=1.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/F3z11/RDA_implementation"
+"Bug Tracker" = "https://github.com/F3z11/RDA_implementation/issues"
