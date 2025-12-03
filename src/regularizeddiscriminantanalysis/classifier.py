@@ -114,31 +114,29 @@ class RegularizedDiscriminantAnalysis(BaseEstimator, ClassifierMixin):
         self.n_samples, self.n_features_in_ = X.shape
 
         # 1. Compute Basic Statistics (Means, Covariances, Priors)
-        self.means_ = np.array([])
-        self.covariances_ = np.array([])
-        self.class_counts_ = np.array([])
+        self.means_ = np.empty((self.n_classes_, self.n_features_in_), dtype=float)
+        self.covariances_ = np.empty(
+            (self.n_classes_, self.n_features_in_, self.n_features_in_), dtype=float
+        )
+        self.class_counts_ = np.empty(self.n_classes_, dtype=int)
 
         # We need the total scatter/covariance for pooling
         # Friedman uses biased (MLE) estimates in derivation, so we use ddof=0 (divide by N)
         # to keep math consistent with the mixing weights (N_k vs N). (coherent also with sklearn)
 
-        for k in self.classes_:
+        for idx, k in enumerate(self.classes_):
             X_k = X[y == k]
             N_k = X_k.shape[0]
 
-            np.append(self.class_counts_, N_k)
-            np.append(self.means_, np.mean(X_k, axis=0))
+            self.class_counts_[idx] = N_k
+            self.means_[idx] = np.mean(X_k, axis=0)
 
-            # Calculate biased covariance (population covariance)
             cov_k = np.cov(X_k, rowvar=False, bias=True)
 
-            # Handle edge case of 1 sample (cov returns 0-d array or NaN if not careful)
             if cov_k.ndim == 0:
                 cov_k = np.zeros((self.n_features_in_, self.n_features_in_))
 
-            np.append(self.covariances_, cov_k)
-
-        self.class_counts_ = np.array(self.class_counts_)
+            self.covariances_[idx] = cov_k
 
         # Compute Priors
         if self.priors is None:
@@ -163,9 +161,17 @@ class RegularizedDiscriminantAnalysis(BaseEstimator, ClassifierMixin):
         Computes the regularized covariance matrices, their inverses (precisions),
         and log-determinants. Stores them for use in prediction.
         """
-        self.regularized_covariances_ = np.array([])
-        self.precisions_ = np.array([])
-        self.log_dets_ = np.array([])
+        self.regularized_covariances_ = np.empty(
+            (self.n_classes_, n_features, n_features),
+            dtype=float,
+        )
+        self.precisions_ = np.empty(
+            (self.n_classes_, n_features, n_features),
+            dtype=float,
+        )
+        self.log_dets_ = np.empty(self.n_classes_, dtype=float)
+
+        Identity = np.eye(n_features)
 
         for k in range(self.n_classes_):
             N_k = self.class_counts_[k]
@@ -187,29 +193,24 @@ class RegularizedDiscriminantAnalysis(BaseEstimator, ClassifierMixin):
             # Friedman Eq (18): (1-gamma)Sigma_k(lambda) + gamma*(tr(Sigma_k(lambda))/p)*I
 
             avg_eig = np.trace(Sigma_lambda_k) / n_features
-            Identity = np.eye(n_features)
 
             Sigma_final_k = (1 - self.gamma) * Sigma_lambda_k + self.gamma * avg_eig * Identity
 
             # Add small constant for numerical stability
             Sigma_final_k += self.reg_param * Identity
 
-            np.append(self.regularized_covariances_, Sigma_final_k)
+            self.regularized_covariances_[k] = Sigma_final_k
 
             # Compute Precision (Inverse) and Log-Determinant
             # Using pinv (pseudo-inverse) is safer for potentially singular matrices (with SVD)
-            np.append(self.precisions_, pinv(Sigma_final_k))
+            self.precisions_[k] = pinv(Sigma_final_k)
 
             # Compute Log Determinant (using slogdet for stability)
             sign, logdet = np.linalg.slogdet(Sigma_final_k)
             if sign <= 0:
                 # If determinant is 0 or negative (shouldn't happen with reg_param), fallback
                 logdet = np.log(max(np.linalg.det(Sigma_final_k), 1e-10))
-            np.append(self.log_dets_, logdet)
-
-        self.regularized_covariances_ = np.array(self.regularized_covariances_)
-        self.precisions_ = np.array(self.precisions_)
-        self.log_dets_ = np.array(self.log_dets_)
+            self.log_dets_[k] = logdet
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
