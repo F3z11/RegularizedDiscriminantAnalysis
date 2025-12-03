@@ -36,3 +36,30 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/F3z11/RDA_implementation"
 "Bug Tracker" = "https://github.com/F3z11/RDA_implementation/issues"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+lint.extend-select = ["E", "F", "I", "UP", "B"]
+lint.ignore = ["E501"]
+lint.fixable = ["ALL"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint.isort]
+known-first-party = ["regularizeddiscriminantanalysis"]
+
+[tool.mypy]
+mypy_path = "src"
+python_executable = ".venv/bin/python"  # TODO this only works in the current venv
+strict = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_any_unimported = true
+no_implicit_optional = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_redundant_casts = true
+warn_unused_configs = true
+check_untyped_defs = true
