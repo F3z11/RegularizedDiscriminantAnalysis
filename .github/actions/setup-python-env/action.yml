@@ -1,0 +1,27 @@
+name: "Setup Python Env"
+description: "Install project dependencies"
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Show where we are
+      shell: bash
+      run: |
+        echo "action path: $GITHUB_ACTION_PATH"
+        echo "workspace:   $GITHUB_WORKSPACE"
+        pwd
+        ls -la
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ github.workspace }}   # <- repo root for pip
+      run: |
+        echo "CWD:" && pwd
+        test -f pyproject.toml && echo "Found pyproject.toml" || (echo "pyproject.toml MISSING" && exit 1)
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements_dev.txt
+        pip install -e .

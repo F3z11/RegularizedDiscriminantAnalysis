@@ -93,3 +93,4 @@ dmypy.json
 # Editors
 .vscode/
 .idea/
+.ruff_cache/
