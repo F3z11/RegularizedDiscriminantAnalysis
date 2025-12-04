@@ -9,4 +9,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
-      - run: ruff check .
+      - run: ruff check src/*
+      - run: ruff check tests/*

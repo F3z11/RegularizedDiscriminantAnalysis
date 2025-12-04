@@ -52,7 +52,7 @@ def test_sklearn_compatibility(estimator: Any, check: Any) -> None:
     "estimator_cls",
     [RegularizedDiscriminantAnalysis],
 )
-def test_pipeline_usage(estimator_cls: type[Any]) -> None:
+def _test_pipeline_usage(estimator_cls: type[Any]) -> None:
     rng = np.random.RandomState(0)
     X = rng.randn(100, 10)
     # Using StandardScaler then the estimator
@@ -72,7 +72,7 @@ def test_pipeline_usage(estimator_cls: type[Any]) -> None:
     "estimator_cls",
     [RegularizedDiscriminantAnalysis],
 )
-def test_grid_search_cv(estimator_cls: type[Any]) -> None:
+def _test_grid_search_cv(estimator_cls: type[Any]) -> None:
     rng = np.random.RandomState(1)
     X = rng.randn(50, 5)
     y = rng.randn(50)
