@@ -39,7 +39,7 @@ dependencies = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py38"
 lint.extend-select = ["E", "F", "I", "UP", "B"]
 lint.ignore = ["E501"]
 lint.fixable = ["ALL"]
@@ -52,7 +52,6 @@ known-first-party = ["regularizeddiscriminantanalysis"]
 
 [tool.mypy]
 mypy_path = "src"
-python_executable = ".venv/bin/python"  # TODO this only works in the current venv
 strict = true
 ignore_missing_imports = true
 disallow_untyped_defs = true

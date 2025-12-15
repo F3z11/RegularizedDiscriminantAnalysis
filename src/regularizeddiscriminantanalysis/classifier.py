@@ -113,79 +113,75 @@ class RegularizedDiscriminantAnalysis(ClassifierMixin, BaseEstimator):
 
         # Check inputs
         X, y = check_X_y(X, y)
-        self._classes = unique_labels(y)
-        n_classes = len(self._classes)
-        self._n_samples, self.n_features_in_ = X.shape
+        self.classes_ = unique_labels(y)
+        n_classes = len(self.classes_)
+        n_samples, self.n_features_in_ = X.shape
 
         # 1. Compute Basic Statistics (Means, Covariances, Priors)
-        self._means = np.empty((n_classes, self.n_features_in_), dtype=float)
-        self._covariances = np.empty(
+        self.means_ = np.empty((n_classes, self.n_features_in_), dtype=float)
+        self.covariances_ = np.empty(
             (n_classes, self.n_features_in_, self.n_features_in_), dtype=float
         )
-        self._class_counts = np.empty(n_classes, dtype=int)
+        class_counts = np.empty(n_classes, dtype=int)
 
         # We need the total scatter/covariance for pooling
         # Friedman uses biased (MLE) estimates in derivation, so we use ddof=0 (divide by N)
         # to keep math consistent with the mixing weights (N_k vs N). (coherent also with sklearn)
 
-        for idx, k in enumerate(self._classes):
+        for idx, k in enumerate(self.classes_):
             X_k = X[y == k]
             N_k = X_k.shape[0]
 
-            self._class_counts[idx] = N_k
-            self._means[idx] = np.mean(X_k, axis=0)
+            class_counts[idx] = N_k
+            self.means_[idx] = np.mean(X_k, axis=0)
 
             cov_k = np.cov(X_k, rowvar=False, bias=True)
 
             if cov_k.ndim == 0:
                 cov_k = np.zeros((self.n_features_in_, self.n_features_in_))
 
-            self._covariances[idx] = cov_k
+            self.covariances_[idx] = cov_k
 
         # Compute Priors
         if self.priors is None:
-            self.priors_ = self._class_counts / self._n_samples
+            self.priors_ = class_counts / n_samples
         else:
             self.priors_ = np.array(self.priors)
 
         # 2. Compute Pooled Covariance (Weighted Average)
         # Friedman Eq (15): S = Sum(S_k) and Eq (14): Sigma_pool = S / N.
         # This is equivalent to weighted average of biased class covariances.
-        self.pooled_cov_ = np.average(self._covariances, axis=0, weights=self._class_counts)
+        self.pooled_cov_ = np.average(self.covariances_, axis=0, weights=class_counts)
 
         # 3. Apply Regularization (Lambda & Gamma) - Pre-compute inverses
-        self._apply_regularization(self._n_samples, self.n_features_in_)
+        self._apply_regularization(n_samples, self.n_features_in_, class_counts)
 
         self._is_fitted = True
 
         return self
 
-    @property
-    def classes_(self) -> np.ndarray:
-        """Array of class labels known to the classifier."""
-        check_is_fitted(self)
-        return self._classes
-
-    def _apply_regularization(self, n_samples: int, n_features: int) -> None:
+    def _apply_regularization(
+        self, n_samples: int, n_features: int, class_counts: np.ndarray
+    ) -> None:
         """
         Computes the regularized covariance matrices, their inverses (precisions),
         and log-determinants. Stores them for use in prediction.
         """
         self.regularized_covariances_ = np.empty(
-            (len(self._classes), n_features, n_features),
+            (len(self.classes_), n_features, n_features),
             dtype=float,
         )
         self.precisions_ = np.empty(
-            (len(self._classes), n_features, n_features),
+            (len(self.classes_), n_features, n_features),
             dtype=float,
         )
-        self.log_dets_ = np.empty(len(self._classes), dtype=float)
+        self.log_dets_ = np.empty(len(self.classes_), dtype=float)
 
         Identity = np.eye(n_features)
 
-        for k in range(len(self._classes)):
-            N_k = self._class_counts[k]
-            Sigma_k = self._covariances[k]
+        for k in range(len(self.classes_)):
+            N_k = class_counts[k]
+            Sigma_k = self.covariances_[k]
 
             # --- Step A: Lambda Mixing (Covariance vs Pool) ---
             # Friedman Eq (16) logic adapted for Covariances:
@@ -242,7 +238,7 @@ class RegularizedDiscriminantAnalysis(ClassifierMixin, BaseEstimator):
 
         scores = self._decision_function(X)
         try:
-            res: np.ndarray = self._classes[np.argmax(scores, axis=1)]
+            res: np.ndarray = self.classes_[np.argmax(scores, axis=1)]
         except IndexError as err:
             raise IndexError(
                 "The number of classes in the training data does not match "
@@ -257,13 +253,13 @@ class RegularizedDiscriminantAnalysis(ClassifierMixin, BaseEstimator):
         Score_k = - (log|Sigma_k| + (x-mu_k)^T Sigma_k^-1 (x-mu_k)) + 2 * log(prior_k)
         """
         n_samples = X.shape[0]
-        scores = np.zeros((n_samples, len(self._classes)))
+        scores = np.zeros((n_samples, len(self.classes_)))
 
-        for k in range(len(self._classes)):
+        for k in range(len(self.classes_)):
             # Get pre-computed parameters
             precision = self.precisions_[k]
             log_det = self.log_dets_[k]
-            mean = self._means[k]
+            mean = self.means_[k]
             prior = self.priors_[k]
 
             # Centered data
