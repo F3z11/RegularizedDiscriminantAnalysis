@@ -3,6 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/RegularizedDiscriminantAnalysis.svg)](https://badge.fury.io/py/RegularizedDiscriminantAnalysis)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/1102658497.svg)](https://doi.org/10.5281/zenodo.17957096)
 [![mypy](https://github.com/F3z11/RegularizedDiscriminantAnalysis/actions/workflows/mypy.yml/badge.svg)](https://github.com/F3z11/RegularizedDiscriminantAnalysis/actions/workflows/mypy.yml)
 [![ruff](https://github.com/F3z11/RegularizedDiscriminantAnalysis/actions/workflows/ruff.yml/badge.svg)](https://github.com/F3z11/RegularizedDiscriminantAnalysis/actions/workflows/ruff.yml)
 [![pytest](https://github.com/F3z11/RegularizedDiscriminantAnalysis/actions/workflows/pytest.yml/badge.svg)](https://github.com/F3z11/RegularizedDiscriminantAnalysis/actions/workflows/pytest.yml)
