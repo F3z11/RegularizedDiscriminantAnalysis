@@ -122,7 +122,7 @@ class RegularizedDiscriminantAnalysis(ClassifierMixin, BaseEstimator):
         self.covariances_ = np.empty(
             (n_classes, self.n_features_in_, self.n_features_in_), dtype=float
         )
-        class_counts = np.empty(n_classes, dtype=int)
+        self._class_counts = np.empty(n_classes, dtype=int)
 
         # We need the total scatter/covariance for pooling
         # Friedman uses biased (MLE) estimates in derivation, so we use ddof=0 (divide by N)
@@ -132,7 +132,7 @@ class RegularizedDiscriminantAnalysis(ClassifierMixin, BaseEstimator):
             X_k = X[y == k]
             N_k = X_k.shape[0]
 
-            class_counts[idx] = N_k
+            self._class_counts[idx] = N_k
             self.means_[idx] = np.mean(X_k, axis=0)
 
             cov_k = np.cov(X_k, rowvar=False, bias=True)
@@ -144,25 +144,23 @@ class RegularizedDiscriminantAnalysis(ClassifierMixin, BaseEstimator):
 
         # Compute Priors
         if self.priors is None:
-            self.priors_ = class_counts / n_samples
+            self.priors_ = self._class_counts / n_samples
         else:
             self.priors_ = np.array(self.priors)
 
         # 2. Compute Pooled Covariance (Weighted Average)
         # Friedman Eq (15): S = Sum(S_k) and Eq (14): Sigma_pool = S / N.
         # This is equivalent to weighted average of biased class covariances.
-        self.pooled_cov_ = np.average(self.covariances_, axis=0, weights=class_counts)
+        self.pooled_cov_ = np.average(self.covariances_, axis=0, weights=self._class_counts)
 
         # 3. Apply Regularization (Lambda & Gamma) - Pre-compute inverses
-        self._apply_regularization(n_samples, self.n_features_in_, class_counts)
+        self._apply_regularization(n_samples, self.n_features_in_)
 
         self._is_fitted = True
 
         return self
 
-    def _apply_regularization(
-        self, n_samples: int, n_features: int, class_counts: np.ndarray
-    ) -> None:
+    def _apply_regularization(self, n_samples: int, n_features: int) -> None:
         """
         Computes the regularized covariance matrices, their inverses (precisions),
         and log-determinants. Stores them for use in prediction.
@@ -180,7 +178,7 @@ class RegularizedDiscriminantAnalysis(ClassifierMixin, BaseEstimator):
         Identity = np.eye(n_features)
 
         for k in range(len(self.classes_)):
-            N_k = class_counts[k]
+            N_k = self._class_counts[k]
             Sigma_k = self.covariances_[k]
 
             # --- Step A: Lambda Mixing (Covariance vs Pool) ---
