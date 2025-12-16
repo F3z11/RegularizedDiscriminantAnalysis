@@ -3,7 +3,7 @@ ruff==0.14.7
 mypy==1.19.0
 mypy-extensions==1.1.0
 scikit-learn-stubs==0.0.3
-dataclasses==0.8
+dataclasses==0.6
 
 # install these to run the examples
 contourpy==1.3.3
